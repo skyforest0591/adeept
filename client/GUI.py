@@ -4,7 +4,7 @@
 # Description : client  
 # Website	 : www.adeept.com
 # Author	  : William
-# Date		: 2019/10/29
+# Date		: 2019/11/21
 
 from socket import *
 import sys
@@ -12,6 +12,7 @@ import time
 import threading as thread
 import tkinter as tk
 import math
+import os
 
 try:
 	import cv2
@@ -47,7 +48,6 @@ def global_init():
 
 
 global_init()
-
 
 ########>>>>>VIDEO<<<<<########
 
@@ -231,6 +231,30 @@ def connection_thread():
 			function_stu = 0
 			Btn_function_6.config(bg=color_btn)
 
+		elif 'CVrun_on' in car_info:
+			Btn_SR.config(bg='#4CAF50')
+
+		elif 'CVrun_off' in car_info:
+			Btn_SR.config(bg=color_btn)
+
+		elif 'police_on' in car_info:
+			Btn_Police.config(bg='#4CAF50')
+
+		elif 'police_off' in car_info:
+			Btn_Police.config(bg=color_btn)
+
+		elif 'rainbow_on' in car_info:
+			Btn_Rainbow.config(bg='#4CAF50')
+
+		elif 'rainbow_off' in car_info:
+			Btn_Rainbow.config(bg=color_btn)
+
+		elif 'sr_on' in car_info:
+			Btn_3.config(bg='#4CAF50')
+
+		elif 'sr_off' in car_info:
+			Btn_3.config(bg=color_btn)
+
 
 def Info_receive():
 	global CPU_TEP,CPU_USE,RAM_USE,CAR_DIR
@@ -326,12 +350,8 @@ def connect(event):	   #Call this function to connect with the server
 		sc.start()							  #Thread starts
 
 
-def scale_send(event):
-	time.sleep(0.03)
-	tcpClicSock.send(('wsB %s'%var_B.get()).encode())
-
-
 def servo_buttons(x,y):
+	global Btn_SR, Btn_Police, Btn_Rainbow, Btn_3
 	def call_up(event):
 		global servo_stu
 		if servo_stu == 0:
@@ -356,29 +376,17 @@ def servo_buttons(x,y):
 			tcpClicSock.send(('lookright').encode())
 			servo_stu = 1
 
-	def call_lookup(event):
-		global servo_stu
-		if servo_stu == 0:
-			tcpClicSock.send(('lookup').encode())
-			servo_stu = 1
+	def call_police(event):
+		tcpClicSock.send(('police').encode())
 
-	def call_lookdown(event):
-		global servo_stu
-		if servo_stu == 0:
-			tcpClicSock.send(('lookdown').encode())
-			servo_stu = 1
+	def call_rainbow(event):
+		tcpClicSock.send(('rainbow').encode())
 
-	def call_grab(event):
-		global servo_stu
-		if servo_stu == 0:
-			tcpClicSock.send(('grab').encode())
-			servo_stu = 1
+	def call_sr(event):
+		tcpClicSock.send(('sr').encode())
 
-	def call_loose(event):
-		global servo_stu
-		if servo_stu == 0:
-			tcpClicSock.send(('loose').encode())
-			servo_stu = 1
+	def call_CVrun(event):
+		tcpClicSock.send(('CVrun').encode())
 
 	def call_stop(event):
 		global servo_stu
@@ -417,33 +425,25 @@ def servo_buttons(x,y):
 	root.bind('<KeyPress-l>', call_lookright) 
 	root.bind('<KeyRelease-l>', call_stop)
 
-	Btn_3 = tk.Button(root, width=8, text='Grab',fg=color_text,bg=color_btn,relief='ridge')
-	Btn_3.place(x=x,y=y)
-	Btn_3.bind('<ButtonPress-1>', call_grab)
-	Btn_3.bind('<ButtonRelease-1>', call_stop)
-	root.bind('<KeyPress-u>', call_grab) 
-	root.bind('<KeyRelease-u>', call_stop) 
+	Btn_3 = tk.Button(root, width=8, text='SpeechR',fg=color_text,bg=color_btn,relief='ridge')
+	Btn_3.place(x=x+140,y=y)
+	Btn_3.bind('<ButtonPress-1>', call_sr)
+	root.bind('<KeyPress-o>', call_sr) 
 
-	Btn_4 = tk.Button(root, width=8, text='Loose',fg=color_text,bg=color_btn,relief='ridge')
-	Btn_4.place(x=x+140,y=y)
-	Btn_4.bind('<ButtonPress-1>', call_loose)
-	Btn_4.bind('<ButtonRelease-1>', call_stop)
-	root.bind('<KeyPress-o>', call_loose) 
-	root.bind('<KeyRelease-o>', call_stop)
+	Btn_SR = tk.Button(root, width=8, text='CV Run',fg=color_text,bg=color_btn,relief='ridge')
+	Btn_SR.place(x=x,y=y)
+	Btn_SR.bind('<ButtonPress-1>', call_CVrun)
+	root.bind('<KeyPress-u>', call_CVrun) 
 
-	Btn_5 = tk.Button(root, width=8, text='L_Down',fg=color_text,bg=color_btn,relief='ridge')
-	Btn_5.place(x=x,y=y-55)
-	Btn_5.bind('<ButtonPress-1>', call_lookdown)
-	Btn_5.bind('<ButtonRelease-1>', call_stop)
-	root.bind('<KeyPress-g>', call_lookdown) 
-	root.bind('<KeyRelease-g>', call_stop)
+	Btn_Police = tk.Button(root, width=8, text='Police',fg=color_text,bg=color_btn,relief='ridge')
+	Btn_Police.place(x=x,y=y-55)
+	Btn_Police.bind('<ButtonPress-1>', call_police)
+	root.bind('<KeyPress-g>', call_police) 
 
-	Btn_6 = tk.Button(root, width=8, text='L_Up',fg=color_text,bg=color_btn,relief='ridge')
-	Btn_6.place(x=x,y=y-55-35)
-	Btn_6.bind('<ButtonPress-1>', call_lookup)
-	Btn_6.bind('<ButtonRelease-1>', call_stop)
-	root.bind('<KeyPress-y>', call_lookup)
-	root.bind('<KeyRelease-y>', call_stop)
+	Btn_Rainbow = tk.Button(root, width=8, text='Rainbow',fg=color_text,bg=color_btn,relief='ridge')
+	Btn_Rainbow.place(x=x,y=y-55-35)
+	Btn_Rainbow.bind('<ButtonPress-1>', call_rainbow)
+	root.bind('<KeyPress-y>', call_rainbow)
 
 	root.bind('<KeyPress-h>', call_home)
 
@@ -581,17 +581,89 @@ def switch_button(x,y):
 
 
 def scale(x,y,w):
-	global var_B
-	var_B = tk.StringVar()
-	var_B.set(100)
+	def speed_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('Speed %s'%var_Speed.get()).encode())
 
-	Scale_B = tk.Scale(root,label=None,
+	Scale_Speed = tk.Scale(root,label=None,
 	from_=60,to=100,orient=tk.HORIZONTAL,length=w,
-	showvalue=1,tickinterval=None,resolution=10,variable=var_B,troughcolor='#448AFF',command=scale_send,fg=color_text,bg=color_bg,highlightthickness=0)
-	Scale_B.place(x=x,y=y)							#Define a Scale and put it in position
+	showvalue=1,tickinterval=None,resolution=10,variable=var_Speed,troughcolor='#448AFF',command=speed_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_Speed.place(x=x,y=y)							#Define a Scale and put it in position
 
 	canvas_cover=tk.Canvas(root,bg=color_bg,height=30,width=510,highlightthickness=0)
 	canvas_cover.place(x=x,y=y+30)
+
+
+def scale_RGB(x,y,w):
+	def R_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('wsR %s'%var_R.get()).encode())
+
+	def G_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('wsG %s'%var_G.get()).encode())
+
+	def B_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('wsB %s'%var_B.get()).encode())
+
+	Scale_R = tk.Scale(root,label=None,
+	from_=0,to=255,orient=tk.HORIZONTAL,length=w,
+	showvalue=1,tickinterval=None,resolution=1,variable=var_R,troughcolor='#F44336',command=R_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_R.place(x=x,y=y)							#Define a Scale and put it in position
+
+	Scale_G = tk.Scale(root,label=None,
+	from_=0,to=255,orient=tk.HORIZONTAL,length=w,
+	showvalue=1,tickinterval=None,resolution=1,variable=var_G,troughcolor='#4CAF50',command=G_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_G.place(x=x,y=y+30)							#Define a Scale and put it in position
+
+	Scale_B = tk.Scale(root,label=None,
+	from_=0,to=255,orient=tk.HORIZONTAL,length=w,
+	showvalue=1,tickinterval=None,resolution=1,variable=var_B,troughcolor='#448AFF',command=B_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_B.place(x=x,y=y+60)							#Define a Scale and put it in position
+
+	canvas_cover=tk.Canvas(root,bg=color_bg,height=30,width=510,highlightthickness=0)
+	canvas_cover.place(x=x,y=y+90)
+
+
+def scale_PWM(x,y,w):
+	def pwm0_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('pwm0 %s'%var_0.get()).encode())
+
+	def pwm1_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('pwm1 %s'%var_1.get()).encode())
+
+	def pwm2_send(event):
+		time.sleep(0.03)
+		tcpClicSock.send(('pwm2 %s'%var_2.get()).encode())
+
+	def call_Save(event):
+		tcpClicSock.send(('Save').encode())
+
+
+	Scale_0 = tk.Scale(root,label=None,
+	from_=200,to=400,orient=tk.HORIZONTAL,length=w,
+	showvalue=1,tickinterval=None,resolution=1,variable=var_0,troughcolor='#212121',command=pwm0_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_0.place(x=x,y=y)							#Define a Scale and put it in position
+
+	Scale_1 = tk.Scale(root,label=None,
+	from_=200,to=400,orient=tk.HORIZONTAL,length=w,
+	showvalue=1,tickinterval=None,resolution=1,variable=var_1,troughcolor='#212121',command=pwm1_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_1.place(x=x,y=y+30)							#Define a Scale and put it in position
+
+	Scale_2 = tk.Scale(root,label=None,
+	from_=200,to=400,orient=tk.HORIZONTAL,length=w,
+	showvalue=1,tickinterval=None,resolution=1,variable=var_2,troughcolor='#212121',command=pwm2_send,fg=color_text,bg=color_bg,highlightthickness=0)
+	Scale_2.place(x=x,y=y+60)							#Define a Scale and put it in position
+
+	canvas_cover=tk.Canvas(root,bg=color_bg,height=30,width=510,highlightthickness=0)
+	canvas_cover.place(x=x,y=y+90)
+
+	Btn_Save = tk.Button(root, width=23, text='Save as Default',fg=color_text,bg='#212121',relief='ridge')
+	Btn_Save.place(x=x+1,y=y+110)
+	Btn_Save.bind('<ButtonPress-1>', call_Save)
 
 
 def ultrasonic_radar(x,y):
@@ -699,10 +771,11 @@ def function_buttons(x,y):
 			tcpClicSock.send(('function_6_off').encode())
 
 	def call_function_7(event):
-		if function_stu == 0:
-			tcpClicSock.send(('function_7_on').encode())
-		else:
-			tcpClicSock.send(('function_7_off').encode())
+		os.system('%s\\instruction.txt'%sys.path[0])
+		# if function_stu == 0:
+		# 	tcpClicSock.send(('function_7_on').encode())
+		# else:
+		# 	tcpClicSock.send(('function_7_off').encode())
 
 	Btn_function_1 = tk.Button(root, width=8, text='RadarScan',fg=color_text,bg=color_btn,relief='ridge')
 	Btn_function_2 = tk.Button(root, width=8, text='FindColor',fg=color_text,bg=color_btn,relief='ridge')
@@ -718,7 +791,7 @@ def function_buttons(x,y):
 	Btn_function_4.place(x=x,y=y+105)
 	Btn_function_5.place(x=x,y=y+140)
 	Btn_function_6.place(x=x,y=y+175)
-	Btn_function_7.place(x=x,y=y+221)
+	Btn_function_7.place(x=x,y=y+215)
 
 	Btn_function_1.bind('<ButtonPress-1>', call_function_1)
 	Btn_function_2.bind('<ButtonPress-1>', call_function_2)
@@ -730,11 +803,28 @@ def function_buttons(x,y):
 
 
 def loop():
-	global root
+	global root, var_Speed, var_R, var_G, var_B, var_0, var_1, var_2
 	root = tk.Tk()			
 	root.title('GWR-R GUI')	  
-	root.geometry('495x570')  
+	root.geometry('565x570')  
 	root.config(bg=color_bg)  
+
+	var_Speed = tk.StringVar()
+	var_Speed.set(100)
+
+	var_R = tk.StringVar()
+	var_R.set(0)
+	var_G = tk.StringVar()
+	var_G.set(0)
+	var_B = tk.StringVar()
+	var_B.set(0)
+
+	var_0 = tk.StringVar()
+	var_0.set(300)
+	var_1 = tk.StringVar()
+	var_1.set(300)
+	var_2 = tk.StringVar()
+	var_2.set(300)
 
 	try:
 		logo =tk.PhotoImage(file = 'logo.png')
@@ -755,9 +845,13 @@ def loop():
 
 	scale(30,230,203)
 
+	scale_RGB(370,280,172)
+
+	scale_PWM(370,400,172)
+
 	ultrasonic_radar(30,290)
 
-	function_buttons(395,290)
+	function_buttons(480,15)
 
 	root.mainloop()
 

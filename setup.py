@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # File name   : setup.py
-# Description : PiCar-C Setup
+# Description : Software Setup
 # Website     : www.adeept.com
 # Author      : William
-# Date        : 2019/10/29
+# Date        : 2019/11/21
 
 import os
 import time
@@ -23,15 +23,14 @@ for x in range(1,4):
 	if os.system("sudo apt-get update") == 0:
 		break
 
-os.system("sudo apt-get purge -y wolfram-engine")
-os.system("sudo apt-get purge -y libreoffice*")
-os.system("sudo apt-get -y clean")
-os.system("sudo apt-get -y autoremove")
-'''
-for x in range(1,4):
-	if os.system("sudo apt-get -y upgrade") == 0:
-		break
-'''
+# os.system("sudo apt-get purge -y wolfram-engine")
+# os.system("sudo apt-get purge -y libreoffice*")
+# os.system("sudo apt-get -y clean")
+# os.system("sudo apt-get -y autoremove")
+
+# for x in range(1,4):
+# 	if os.system("sudo apt-get -y upgrade") == 0:
+# 		break
 
 for x in range(1,4):
 	if os.system("sudo apt-get install -y i2c-tools") == 0:
@@ -44,6 +43,72 @@ for x in range(1,4):
 for x in range(1,4):
 	if os.system("sudo pip3 install rpi_ws281x") == 0:
 		break
+
+##########SR###########
+for x in range(1,4):
+	if os.system("sudo apt-get install -y bison libasound2-dev swig") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo apt-get install -y pulseaudio libpulse-dev") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo apt-get install -y portaudio19-dev python3-all-dev python3-pyaudio") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo apt-get install -qq python3 python3-dev python3-pip build-essential swig libpulse-dev") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo apt-get install -y gcc libffi-dev libssl-dev python3-dev") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo pip3 install pyaudio") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo apt-get install -y flac") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo wget https://sourceforge.net/projects/cmusphinx/files/sphinxbase/5prealpha/sphinxbase-5prealpha.tar.gz/download -O sphinxbase.tar.gz") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo wget https://sourceforge.net/projects/cmusphinx/files/pocketsphinx/5prealpha/pocketsphinx-5prealpha.tar.gz/download -O pocketsphinx.tar.gz") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo tar -xzvf sphinxbase.tar.gz") == 0:
+		break
+
+for x in range(1,4):
+	if os.system("sudo tar -xzvf pocketsphinx.tar.gz") == 0:
+		break
+
+try:
+	os.system("cd sphinxbase-5prealpha/ && ./configure -enable-fixed && make && sudo make install")
+except:
+	pass
+
+try:
+	os.system("cd pocketsphinx-5prealpha/ && ./configure && make && sudo make install")
+except:
+	pass
+
+try:
+	os.system("sudo pip3 install pocketsphinx")
+except:
+	pass
+
+try:
+	os.system("sudo pip3 install SpeechRecognition")
+except:
+	pass
+##########SR###########
 
 for x in range(1,4):
 	if os.system("sudo apt-get install -y python3-smbus") == 0:
@@ -69,35 +134,7 @@ for x in range(1,4):
 for x in range(1,4):
 	if os.system("sudo apt-get install -y libopencv-dev python3-opencv") == 0:
 		break
-'''
-for x in range(1,4):
-	if os.system("sudo apt-get install -y libhdf5-dev") == 0:   ####
-		break
 
-for x in range(1,4):
-	if os.system("sudo apt-get install -y libhdf5-serial-dev") == 0:   ####
-		break
-
-for x in range(1,4):
-	if os.system("sudo apt-get install -y build-essential pkg-config") == 0:   ####
-		break
-
-for x in range(1,4):
-	if os.system("sudo apt-get install -y libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev") == 0:   ####
-		break
-
-for x in range(1,4):
-	if os.system("sudo apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libv4l-dev") == 0:   ####
-		break
-
-for x in range(1,4):
-	if os.system("sudo apt-get install -y libgtk2.0-dev libatlas-base-dev gfortran") == 0:   ####
-		break
-
-for x in range(1,4):
-	if os.system("sudo apt-get install -y libqtgui4 python3-pyqt5 libqt4-test") == 0:
-		break
-'''
 for x in range(1,4):
 	if os.system("sudo pip3 install imutils zmq pybase64 psutil") == 0:   ####
 		break
@@ -119,19 +156,16 @@ except:
 for x in range(1,4):
 	if os.system("sudo apt-get install -y util-linux procps hostapd iproute2 iw haveged dnsmasq") == 0:
 		break
-'''
+
 try:
-	os.system('sudo mkdir //home/pi/.config/autostart')
-	os.system('sudo touch //home/pi/.config/autostart/car.desktop')
-	with open("//home/pi/.config/autostart/car.desktop",'w') as file_to_write:
-		file_to_write.write("[Desktop Entry]\n   Name=Car\n   Comment=Car\n   Exec=sudo python3 //home/pi/gwr/server/server.py\n   Icon=false\n   Terminal=false\n   MutipleArgs=false\n   Type=Application\n   Catagories=Application;Development;\n   StartupNotify=true")
+	os.system('sudo rm //home/pi/startup.sh')
 except:
 	pass
-'''
+
 try:
 	os.system('sudo touch //home/pi/startup.sh')
 	with open("//home/pi/startup.sh",'w') as file_to_write:
-		file_to_write.write("#!/bin/sh\nsudo python3 //home/pi/picar-c/server/server.py")
+		file_to_write.write("#!/bin/sh\nsudo python3 /%s/server.py"%sys.path[0])
 except:
 	pass
 

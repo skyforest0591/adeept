@@ -1,9 +1,9 @@
 #!/usr/bin/env/python
-# File name   : appserver.py
+# File name   : server.py
+# Production  : PiCar-C
 # Website     : www.adeept.com
-# E-mail      : adeept@163.com
 # Author      : William
-# Date        : 2019/10/28
+# Date        : 2019/11/21
 
 import socket
 import threading
@@ -16,8 +16,8 @@ import switch
 servo.servo_init()
 switch.switchSetup()
 switch.set_all_switch_off()
-LED  = LED.LED()
-LED.colorWipe(80,255,0)
+Led  = LED.LED()
+Led.colorWipe(80,255,0)
 
 step_set = 1
 speed_set = 100
@@ -30,21 +30,22 @@ pos_input = 1
 catch_input = 1
 cir_input = 6
 
-servo_speed  = 11
+servo_speed  = 5
 
-last_direction = 'no'
+ledthread = LED.LED_ctrl()
+ledthread.start()
 
 class Servo_ctrl(threading.Thread):
     def __init__(self, *args, **kwargs):
         super(Servo_ctrl, self).__init__(*args, **kwargs)
-        self.__flag = threading.Event()     # 用于暂停线程的标识
-        self.__flag.set()       # 设置为True
-        self.__running = threading.Event()      # 用于停止线程的标识
-        self.__running.set()      # 将running设置为True
+        self.__flag = threading.Event()
+        self.__flag.set()
+        self.__running = threading.Event()
+        self.__running.set()
 
     def run(self):
         while self.__running.isSet():
-            self.__flag.wait()      # 为True时立即返回, 为False时阻塞直到内部的标识位为True后返回
+            self.__flag.wait()
             if servo_command == 'lookleft':
                 servo.lookleft(servo_speed)
             elif servo_command == 'lookright':
@@ -53,27 +54,17 @@ class Servo_ctrl(threading.Thread):
                 servo.up(servo_speed)
             elif servo_command == 'down':
                 servo.down(servo_speed)
-            elif servo_command == 'lookup':
-                servo.lookup(servo_speed)
-            elif servo_command == 'lookdown':
-                servo.lookdown(servo_speed)
-            elif servo_command == 'grab':
-                servo.grab(servo_speed)
-            elif servo_command == 'loose':
-                servo.loose(servo_speed)
-            else:
-                pass
-            time.sleep(0.07)
+            time.sleep(0.03)
 
     def pause(self):
-        self.__flag.clear()     # 设置为False, 让线程阻塞
+        self.__flag.clear()
 
     def resume(self):
-        self.__flag.set()    # 设置为True, 让线程停止阻塞
+        self.__flag.set()
 
     def stop(self):
-        self.__flag.set()       # 将线程从暂停状态恢复, 如何已经暂停的话
-        self.__running.clear()        # 设置为False  
+        self.__flag.set()
+        self.__running.clear()
 
 
 def app_ctrl():
@@ -94,65 +85,42 @@ def app_ctrl():
         move.setup()
 
     def appCommand(data_input):
-        global direction_command, turn_command, servo_command, last_direction
+        global direction_command, turn_command, servo_command
         if data_input == 'forwardStart\n':
             direction_command = 'forward'
-            last_direction = 'forward'
-            move.motor_A('backward', speed_set)
-            move.motor_B('forward', speed_set)
-            LED.colorWipe(255,255,255)
+            move.move(speed_set, direction_command)
 
         elif data_input == 'backwardStart\n':
             direction_command = 'backward'
-            last_direction = 'backward'
-            move.motor_A('forward', speed_set)
-            move.motor_B('backward', speed_set)
-            LED.colorWipe(80,255,0)
+            move.move(speed_set, direction_command)
 
         elif data_input == 'leftStart\n':
             turn_command = 'left'
-            servo.turn_ctrl('left')
-            if last_direction == 'forward':
-                move.motor_A('backward', speed_set)
-                move.motor_B('forward', speed_set)
-            elif last_direction == 'backward':
-                move.motor_A('forward', speed_set)
-                move.motor_B('backward', speed_set)
-            LED.colorWipe(80,0,255)
+            servo.turnLeft()
+            move.move(speed_set, direction_command)
 
         elif data_input == 'rightStart\n':
             turn_command = 'right'
-            servo.turn_ctrl('right')
-            if last_direction == 'forward':
-                move.motor_A('backward', speed_set)
-                move.motor_B('forward', speed_set)
-            elif last_direction == 'backward':
-                move.motor_A('forward', speed_set)
-                move.motor_B('backward', speed_set)
-            LED.colorWipe(80,0,255)
+            servo.turnRight()
+            move.move(speed_set, direction_command)
 
         elif 'forwardStop' in data_input:
-            direction_command = 'no'
-            move.motorStop()
-            LED.colorWipe(255,80,0)
+            if turn_command == 'no':
+                move.motorStop()
 
         elif 'backwardStop' in data_input:
-            direction_command = 'no'
-            move.motorStop()
-            LED.colorWipe(255,80,0)
+            if turn_command == 'no':
+                move.motorStop()
 
         elif 'leftStop' in data_input:
             turn_command = 'no'
+            servo.turnMiddle()
             move.motorStop()
-            servo.turn_ctrl('middle')
-            LED.colorWipe(255,255,255)
 
         elif 'rightStop' in data_input:
             turn_command = 'no'
+            servo.turnMiddle()
             move.motorStop()
-            servo.turn_ctrl('middle')
-            LED.colorWipe(255,255,255)
-
 
         if data_input == 'lookLeftStart\n':
             servo_command = 'lookleft'
@@ -185,10 +153,20 @@ def app_ctrl():
 
 
         if data_input == 'aStart\n':
-            LED.colorWipe(0,135,255)
+            if LED.ledfunc != 'police':
+                LED.ledfunc = 'police'
+                ledthread.resume()
+            elif LED.ledfunc == 'police':
+                LED.ledfunc = ''
+                ledthread.pause()
 
         elif data_input == 'bStart\n':
-            LED.colorWipe(255,135,0)
+            if LED.ledfunc != 'rainbow':
+                LED.ledfunc = 'rainbow'
+                ledthread.resume()
+            elif LED.ledfunc == 'rainbow':
+                LED.ledfunc = ''
+                ledthread.pause()
 
         elif data_input == 'cStart\n':
             switch.switch(1,1)
@@ -201,11 +179,9 @@ def app_ctrl():
             switch.switch(3,0)
 
         elif 'aStop' in data_input:
-            servo_move.pause()
-            servo_command = 'no'
+            pass
         elif 'bStop' in data_input:
-            servo_move.pause()
-            servo_command = 'no'
+            pass
         elif 'cStop' in data_input:
             pass
         elif 'dStop' in data_input:
@@ -230,21 +206,21 @@ def app_ctrl():
             AppCliSock, AppAddr = AppSerSock.accept()
             print('...App connected from :', AppAddr)
         except:
-            ap_threading=threading.Thread(target=ap_thread)   #Define a thread for data receiving
+            ap_threading=threading.Thread(target=ap_thread)       #Define a thread for AP Mode
             ap_threading.setDaemon(True)                          #'True' means it is a front thread,it would close when the mainloop() closes
             ap_threading.start()                                  #Thread starts
 
-            LED.colorWipe(0,16,50)
+            led.colorWipe(0,16,50)
             time.sleep(1)
-            LED.colorWipe(0,16,100)
+            led.colorWipe(0,16,100)
             time.sleep(1)
-            LED.colorWipe(0,16,150)
+            led.colorWipe(0,16,150)
             time.sleep(1)
-            LED.colorWipe(0,16,200)
+            led.colorWipe(0,16,200)
             time.sleep(1)
-            LED.colorWipe(0,16,255)
+            led.colorWipe(0,16,255)
             time.sleep(1)
-            LED.colorWipe(35,255,35)
+            led.colorWipe(35,255,35)
 
             AppSerSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             AppSerSock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -256,7 +232,7 @@ def app_ctrl():
 
     appconnect()
     setup()
-    app_threading=threading.Thread(target=appconnect)         #Define a thread for FPV and OpenCV
+    app_threading=threading.Thread(target=appconnect)         #Define a thread for app connection
     app_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
     app_threading.start()                                     #Thread starts
 
@@ -268,19 +244,5 @@ def app_ctrl():
         appCommand(data)
         pass
 
-AppConntect_threading=threading.Thread(target=app_ctrl)         #Define a thread for FPV and OpenCV
-AppConntect_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
-AppConntect_threading.start()                                     #Thread starts
-
 if __name__ == '__main__':
-    i = 1
-    try:
-        while 1:
-            i += 1
-            print(i)
-            time.sleep(30)
-            pass
-    except:
-        servo_move.stop()
-        move.move(0, 'no', 'no', rad)
-        LED.colorWipe(0,0,0)
+    app_ctrl()

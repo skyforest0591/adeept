@@ -1,9 +1,9 @@
 #!/usr/bin/env/python3
 # File name   : server.py
 # Description : for FPV video and OpenCV functions
-# Website     : www.gewbot.com
+# Website     : www.adeept.com
 # Author      : William(Based on Adrian Rosebrock's OpenCV code on pyimagesearch.com)
-# Date        : 2019/08/28
+# Date        : 2019/11/21
 
 import time
 import threading
@@ -24,6 +24,7 @@ import datetime
 from rpi_ws281x import *
 import move
 import switch
+import ultra
 
 pid = PID.PID()
 pid.SetKp(0.5)
@@ -36,6 +37,25 @@ FindColorMode = 0
 WatchDogMode  = 0
 UltraData = 3
 LED  = LED.LED()
+
+CVrun = 0
+speed_set = 100
+back_R = 0.4
+forward_R = 0.6
+
+def moveCtrl(distanceInput, backRange, forwardRange):
+    if CVrun:
+        if distanceInput > forwardRange:
+            move.move(speed_set, 'forward')
+        elif distanceInput < backRange:
+            move.move(speed_set, 'backward')
+        else:
+            move.motorStop()
+
+
+def coe_Genout(errorInput, totalRange):
+    return errorInput/totalRange
+
 
 class FPV: 
     def __init__(self):
@@ -88,7 +108,6 @@ class FPV:
 
         avg = None
         motionCounter = 0
-        #time.sleep(4)
         lastMovtionCaptured = datetime.datetime.now()
 
         for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
@@ -135,45 +154,32 @@ class FPV:
                         error = (320-X)/5
                         outv = int(round((pid.GenOut(error)),0))
                         servo.lookleft(outv)
-                        #move.move(70, 'no', 'left', 0.6)
+                        servo.turnLeft(coe_Genout(error, 64))
                         X_lock = 0
                     elif X > (330+tor*3):
                         error = (X-240)/5
                         outv = int(round((pid.GenOut(error)),0))
                         servo.lookright(outv)
-                        #move.move(70, 'no', 'right', 0.6)
+                        servo.turnRight(coe_Genout(error, 64))
                         X_lock = 0
                     else:
-                        #move.motorStop()
+                        move.motorStop()
                         X_lock = 1
 
                     if X_lock == 1 and Y_lock == 1:
                         switch.switch(1,1)
                         switch.switch(2,1)
                         switch.switch(3,1)
+                        moveCtrl(ultra.checkdist(), back_R, forward_R)
                     else:
+                        move.motorStop()
                         switch.switch(1,0)
                         switch.switch(2,0)
                         switch.switch(3,0)
-
-                        # if UltraData > 0.5:
-                        #     move.move(70, 'forward', 'no', 0.6)
-                        # elif UltraData < 0.4:
-                        #     move.move(70, 'backward', 'no', 0.6)
-                        #     print(UltraData)
-                        # else:
-                        #     move.motorStop()
                     
-
                 else:
                     cv2.putText(frame_image,'Target Detecting',(40,60), font, 0.5,(255,255,255),1,cv2.LINE_AA)
                     move.motorStop()
-
-                for i in range(1, len(pts)):
-                    if pts[i - 1] is None or pts[i] is None:
-                        continue
-                    thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
-                    cv2.line(frame_image, pts[i - 1], pts[i], (0, 0, 255), thickness)
                 ####>>>OpenCV Ends<<<####
                 
 

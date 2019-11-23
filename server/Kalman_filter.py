@@ -1,9 +1,9 @@
-#! /usr/bin/python
-# File name   : car_dir.py
+#! /usr/bin/python3
+# File name   : Kalman_filter.py
 # Description : By controlling Servo,thecamera can move Up and down,left and right and the Ultrasonic wave can move to left and right.
-# Website     : www.gewbot.com
+# Website     : www.adeept.com
 # Author      : William
-# Date        : 2018/08/22
+# Date        : 2019/11/21
 import time
 
 

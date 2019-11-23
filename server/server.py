@@ -1,13 +1,11 @@
 #!/usr/bin/env/python
 # File name   : server.py
-# Production  : GWR
-# Website     : www.gewbot.com
-# E-mail      : gewubot@163.com
+# Production  : PiCar-C
+# Website     : www.adeept.com
 # Author      : William
-# Date        : 2019/07/24
+# Date        : 2019/11/21
 import servo
 servo.servo_init()
-servo.turn_ctrl('middle')
 import socket
 import time
 import threading
@@ -21,14 +19,105 @@ import LED
 import findline
 import switch
 import ultra
+import PID
+from mpu6050 import mpu6050
 
-servo_speed  = 11
+SR_dect = 0
+appConnection = 1
+
+
+if SR_dect:
+    try:
+        import SR
+        SR_dect = 1
+    except:
+        SR_dect = 0
+        pass
+SR_mode = 0
+
+
+if appConnection:
+    try:
+        import appserver
+        AppConntect_threading=threading.Thread(target=appserver.app_ctrl)         #Define a thread for FPV and OpenCV
+        AppConntect_threading.setDaemon(True)                             #'True' means it is a front thread,it would close when the mainloop() closes
+        AppConntect_threading.start()                                     #Thread starts
+    except:
+        pass
+
+
+MPU_connection = 1
+try:
+    sensor = mpu6050(0x68)
+    print('mpu6050 connected.')
+except:
+    MPU_connection = 0
+    print('mpu6050 disconnected.')
+
+servo_speed  = 5
 functionMode = 0
 dis_keep = 0.35
 goal_pos = 0
 tor_pos  = 1
-mpu_speed = 2
+mpu_speed = 1
 init_get = 0
+
+range_min = 0.35
+
+R_set = 0
+G_set = 0
+B_set = 0
+
+def autoDect(speed):
+    move.motorStop()
+    servo.ahead()
+    time.sleep(0.3)
+    getMiddle = ultra.checkdist()
+    print('M%f'%getMiddle)
+
+    servo.ahead()
+    servo.lookleft(100)
+    time.sleep(0.3)
+    getLeft = ultra.checkdist()
+    print('L%f'%getLeft)
+
+    servo.ahead()
+    servo.lookright(100)
+    time.sleep(0.3)
+    getRight = ultra.checkdist()
+    print('R%f'%getRight)
+
+    if getMiddle >= max(getLeft, getRight):
+        if getMiddle > range_min:
+            move.move(speed, 'forward')
+            time.sleep(0.5)
+            move.motorStop()
+        else:
+            move.move(speed, 'backward')
+            time.sleep(0.5)
+    elif getLeft > max(getMiddle, getRight):
+        servo.ahead()
+        servo.turnLeft()
+        servo.lookleft(100)
+        if getLeft > range_min:
+            move.move(speed,'forward')
+            time.sleep(0.5)
+            move.motorStop()
+        else:
+            move.move(speed, 'backward')
+            time.sleep(0.5)
+    elif getRight > max(getMiddle, getLeft):
+        servo.ahead()
+        servo.turnRight()
+        servo.lookright(100)
+        if getRight > range_min:
+            move.move(speed,'forward')
+            time.sleep(0.5)
+            move.motorStop()
+        else:
+            move.move(speed, 'backward')
+            time.sleep(0.5)
+
 
 class Servo_ctrl(threading.Thread):
     def __init__(self, *args, **kwargs):
@@ -42,26 +131,118 @@ class Servo_ctrl(threading.Thread):
         global goal_pos, servo_command, init_get, functionMode
         while self.__running.isSet():
             self.__flag.wait()
-            if servo_command == 'lookleft':
-                servo.lookleft(servo_speed)
-            elif servo_command == 'lookright':
-                servo.lookright(servo_speed)
-            elif servo_command == 'up':
-                servo.up(servo_speed)
-            elif servo_command == 'down':
-                servo.down(servo_speed)
-            elif servo_command == 'lookup':
-                servo.lookup(servo_speed)
-            elif servo_command == 'lookdown':
-                servo.lookdown(servo_speed)
-            elif servo_command == 'grab':
-                servo.grab(servo_speed)
-            elif servo_command == 'loose':
-                servo.loose(servo_speed)
-            else:
-                pass
+            if functionMode != 6:
+                if servo_command == 'lookleft':
+                    servo.lookleft(servo_speed)
+                elif servo_command == 'lookright':
+                    servo.lookright(servo_speed)
+                elif servo_command == 'up':
+                    servo.up(servo_speed)
+                elif servo_command == 'down':
+                    servo.down(servo_speed)
+                else:
+                    pass
 
-            time.sleep(0.07)
+            if functionMode == 4:
+                servo.ahead()
+                findline.run()
+                if not functionMode:
+                    move.motorStop()
+            elif functionMode == 5:
+                autoDect(50)
+                if not functionMode:
+                    move.motorStop()
+            elif functionMode == 6:
+                if MPU_connection:
+                    accelerometer_data = sensor.get_accel_data()
+                    X_get = accelerometer_data['x']
+                    if not init_get:
+                        goal_pos = X_get
+                        init_get = 1
+                    if servo_command == 'up':
+                        servo.up(servo_speed)
+                        time.sleep(0.2)
+                        accelerometer_data = sensor.get_accel_data()
+                        X_get = accelerometer_data['x']
+                        goal_pos = X_get
+                    elif servo_command == 'down':
+                        servo.down(servo_speed)
+                        time.sleep(0.2)
+                        accelerometer_data = sensor.get_accel_data()
+                        X_get = accelerometer_data['x']
+                        goal_pos = X_get
+                    if abs(X_get-goal_pos)>tor_pos:
+                        if X_get > goal_pos:
+                            servo.down(int(mpu_speed*abs(X_get - goal_pos)))
+                        elif X_get < goal_pos:
+                            servo.up(int(mpu_speed*abs(X_get - goal_pos)))
+                        time.sleep(0.03)
+                        continue
+                else:
+                    functionMode = 0
+                    try:
+                        self.pause()
+                    except:
+                        pass
+
+            time.sleep(0.03)
+
+    def pause(self):
+        self.__flag.clear()
+
+    def resume(self):
+        self.__flag.set()
+
+    def stop(self):
+        self.__flag.set()
+        self.__running.clear()
+
+
+class SR_ctrl(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super(SR_ctrl, self).__init__(*args, **kwargs)
+        self.__flag = threading.Event()
+        self.__flag.set()
+        self.__running = threading.Event()
+        self.__running.set()
+
+    def run(self):
+        global goal_pos, servo_command, init_get, functionMode
+        while self.__running.isSet():
+            self.__flag.wait()
+            if SR_mode:
+                voice_command = SR.run()
+                if voice_command == 'forward':
+                    turn.turnMiddle()
+                    move.move(speed_set, 'forward')
+                    time.sleep(1)
+                    move.motorStop()
+
+                elif voice_command == 'backward':
+                    turn.turnMiddle()
+                    move.move(speed_set, 'backward')
+                    time.sleep(1)
+                    move.motorStop()
+
+                elif voice_command == 'left':
+                    servo.turnLeft()
+                    move.move(speed_set, 'forward')
+                    time.sleep(1)
+                    turn.turnMiddle()
+                    move.motorStop()
+
+                elif voice_command == 'right':
+                    servo.turnRight()
+                    move.move(speed_set, 'forward')
+                    time.sleep(1)
+                    turn.turnMiddle()
+                    move.motorStop()
+
+                elif voice_command == 'stop':
+                    turn.turnMiddle()
+                    move.motorStop()
+            else:
+                self.pause()
 
     def pause(self):
         self.__flag.clear()
@@ -101,7 +282,7 @@ def  ap_thread():
 
 
 def run():
-    global servo_move, speed_set, servo_command, functionMode, init_get
+    global servo_move, speed_set, servo_command, functionMode, init_get, R_set, G_set, B_set, SR_mode
     servo.servo_init()
     move.setup()
     findline.setup()
@@ -128,35 +309,27 @@ def run():
 
         elif 'forward' == data:
             direction_command = 'forward'
-            move.motor_A('backward', speed_set)
-            move.motor_B('forward', speed_set)
-            LED.colorWipe(255,255,255)
+            move.move(speed_set, direction_command)
         
         elif 'backward' == data:
             direction_command = 'backward'
-            move.motor_A('forward', speed_set)
-            move.motor_B('backward', speed_set)
-            LED.colorWipe(80,255,0)
+            move.move(speed_set, direction_command)
 
         elif 'DS' in data:
             direction_command = 'no'
-            move.motorStop()
-            LED.colorWipe(255,80,0)
+            move.move(speed_set, direction_command)
 
         elif 'left' == data:
-            turn_command = 'left'
-            servo.turn_ctrl('left')
-            LED.colorWipe(80,0,255)
+            # turn_command = 'left'
+            servo.turnLeft()
 
         elif 'right' == data:
-            turn_command = 'right'
-            servo.turn_ctrl('right')
-            LED.colorWipe(80,0,255)
+            # turn_command = 'right'
+            servo.turnRight()
 
         elif 'TS' in data:
-            turn_command = 'no'
-            servo.turn_ctrl('middle')
-            LED.colorWipe(255,255,255)
+            # turn_command = 'no'
+            servo.turnMiddle()
 
 
         elif 'Switch_1_on' in data:
@@ -185,8 +358,6 @@ def run():
 
 
         elif 'function_1_on' in data:
-            pass
-            '''
             servo.ahead()
             time.sleep(0.2)
             tcpCliSock.send(('function_1_on').encode())
@@ -195,7 +366,6 @@ def run():
             print(radar_send)
             time.sleep(0.3)
             tcpCliSock.send(('function_1_off').encode())
-            '''
 
 
         elif 'function_2_on' in data:
@@ -209,40 +379,32 @@ def run():
             tcpCliSock.send(('function_3_on').encode())
 
         elif 'function_4_on' in data:
-            '''
             functionMode = 4
             servo_move.resume()
             tcpCliSock.send(('function_4_on').encode())
-            '''
 
         elif 'function_5_on' in data:
-            '''
             functionMode = 5
             servo_move.resume()
             tcpCliSock.send(('function_5_on').encode())
-            '''
 
         elif 'function_6_on' in data:
-            '''
             if MPU_connection:
                 functionMode = 6
                 servo_move.resume()
                 tcpCliSock.send(('function_6_on').encode())
-            '''
 
 
         #elif 'function_1_off' in data:
         #    tcpCliSock.send(('function_1_off').encode())
 
         elif 'function_2_off' in data:
-            '''
             functionMode = 0
             fpv.FindColor(0)
             switch.switch(1,0)
             switch.switch(2,0)
             switch.switch(3,0)
             tcpCliSock.send(('function_2_off').encode())
-            '''
 
         elif 'function_3_off' in data:
             functionMode = 0
@@ -285,22 +447,6 @@ def run():
             servo_command = 'down'
             servo_move.resume()
 
-        elif 'lookup' == data:
-            servo_command = 'lookup'
-            servo_move.resume()
-
-        elif 'lookdown' == data:
-            servo_command = 'lookdown'
-            servo_move.resume()
-
-        elif 'grab' == data:
-            servo_command = 'grab'
-            servo_move.resume()
-
-        elif 'loose' == data:
-            servo_command = 'loose'
-            servo_move.resume()
-
         elif 'stop' == data:
             if not functionMode:
                 servo_move.pause()
@@ -310,12 +456,109 @@ def run():
         elif 'home' == data:
             servo.ahead()
 
+        elif 'CVrun' == data:
+            if not FPV.CVrun:
+                FPV.CVrun = 1
+                tcpCliSock.send(('CVrun_on').encode())
+            else:
+                FPV.CVrun = 0
+                tcpCliSock.send(('CVrun_off').encode())
+
+        elif 'wsR' in data:
+            try:
+                set_R=data.split()
+                R_set = int(set_R[1])
+                led.colorWipe(R_set, G_set, B_set)
+            except:
+                pass
+
+        elif 'wsG' in data:
+            try:
+                set_G=data.split()
+                G_set = int(set_G[1])
+                led.colorWipe(R_set, G_set, B_set)
+            except:
+                pass
+
         elif 'wsB' in data:
             try:
                 set_B=data.split()
-                speed_set = int(set_B[1])
+                B_set = int(set_B[1])
+                led.colorWipe(R_set, G_set, B_set)
             except:
                 pass
+
+        elif 'pwm0' in data:
+            try:
+                set_pwm0=data.split()
+                pwm0_set = int(set_pwm0[1])
+                servo.setPWM(0, pwm0_set)
+            except:
+                pass
+
+        elif 'pwm1' in data:
+            try:
+                set_pwm1=data.split()
+                pwm1_set = int(set_pwm1[1])
+                servo.setPWM(1, pwm1_set)
+            except:
+                pass
+
+        elif 'pwm2' in data:
+            try:
+                set_pwm2=data.split()
+                pwm2_set = int(set_pwm2[1])
+                servo.setPWM(2, pwm2_set)
+            except:
+                pass
+
+        elif 'Speed' in data:
+            try:
+                set_speed=data.split()
+                speed_set = int(set_speed[1])
+            except:
+                pass
+
+        elif 'Save' in data:
+            try:
+                servo.saveConfig()
+            except:
+                pass
+
+        elif 'police' in data:
+            if LED.ledfunc != 'police':
+                tcpCliSock.send(('rainbow_off').encode())
+                LED.ledfunc = 'police'
+                ledthread.resume()
+                tcpCliSock.send(('police_on').encode())
+            elif LED.ledfunc == 'police':
+                LED.ledfunc = ''
+                ledthread.pause()
+                tcpCliSock.send(('police_off').encode())
+
+        elif 'rainbow' in data:
+            if LED.ledfunc != 'rainbow':
+                tcpCliSock.send(('police_off').encode())
+                LED.ledfunc = 'rainbow'
+                ledthread.resume()
+                tcpCliSock.send(('rainbow_on').encode())
+            elif LED.ledfunc == 'rainbow':
+                LED.ledfunc = ''
+                ledthread.pause()
+                tcpCliSock.send(('rainbow_off').encode())
+
+        elif 'sr' in data:
+            if not SR_mode:
+                if SR_dect:
+                    SR_mode = 1
+                    tcpCliSock.send(('sr_on').encode())
+                    sr.resume()
+
+            elif SR_mode:
+                SR_mode = 0
+                sr.pause()
+                move.motorStop()
+                tcpCliSock.send(('sr_off').encode())
 
         else:
             pass
@@ -335,17 +578,17 @@ def wifi_check():
         ap_threading.setDaemon(True)                          #'True' means it is a front thread,it would close when the mainloop() closes
         ap_threading.start()                                  #Thread starts
 
-        LED.colorWipe(0,16,50)
+        led.colorWipe(0,16,50)
         time.sleep(1)
-        LED.colorWipe(0,16,100)
+        led.colorWipe(0,16,100)
         time.sleep(1)
-        LED.colorWipe(0,16,150)
+        led.colorWipe(0,16,150)
         time.sleep(1)
-        LED.colorWipe(0,16,200)
+        led.colorWipe(0,16,200)
         time.sleep(1)
-        LED.colorWipe(0,16,255)
+        led.colorWipe(0,16,255)
         time.sleep(1)
-        LED.colorWipe(35,255,35)
+        led.colorWipe(35,255,35)
 
 
 
@@ -359,12 +602,18 @@ if __name__ == '__main__':
     BUFSIZ = 1024                             #Define buffer size
     ADDR = (HOST, PORT)
 
-    try:
-        LED  = LED.LED()
-        LED.colorWipe(255,16,0)
-    except:
-        print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
-        pass
+    # try:
+    led  = LED.LED()
+    led.colorWipe(255,16,0)
+    ledthread = LED.LED_ctrl()
+    ledthread.start()
+    # except:
+    #     print('Use "sudo pip3 install rpi_ws281x" to install WS_281x package')
+    #     pass
+
+    if SR_dect:
+        sr = SR_ctrl()
+        sr.start()
 
     while  1:
         wifi_check()
@@ -383,17 +632,17 @@ if __name__ == '__main__':
             fps_threading.start()                                     #Thread starts
             break
         except:
-            LED.colorWipe(0,0,0)
+            led.colorWipe(0,0,0)
 
         try:
-            LED.colorWipe(0,80,255)
+            led.colorWipe(0,80,255)
         except:
             pass
-        run()
+    run()
     try:
         run()
     except:
         servo_move.stop()
-        LED.colorWipe(0,0,0)
+        led.colorWipe(0,0,0)
         servo.clean_all()
         move.destroy()
