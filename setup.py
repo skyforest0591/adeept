@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # File name   : setup.py
 # Description : Software Setup
-# Website     : www.adeept.com
+# Website     : www.csailab.com
 # Author      : William
 # Date        : 2019/11/21
 

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # File name   : Ultrasonic.py
 # Description : Detection distance and tracking with ultrasonic
-# Website     : www.adeept.com
-# Author      : William
+# Website     : www.csailab.com
+# Author      : Simon
 # Date        : 2019/11/21
 import psutil
 

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # File name   : speech.py
 # Description : Speech Recognition 
-# Website     : www.adeept.com
-# E-mail      : support@adeept.com
+# Website     : www.csailab.com
+# E-mail      : tech@seawolftech.com
 # Author      : William & Authors from https://github.com/Uberi/speech_recognition#readme
 # Date        : 2019/11/21
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # File name   : findline.py
 # Description : line tracking 
-# Website     : www.adeept.com
+# Website     : www.csailab.com
 # Author      : William
 # Date        : 2019/11/21
 import RPi.GPIO as GPIO

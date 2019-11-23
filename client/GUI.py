@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+﻿#!/usr/bin/python3
 # -*- coding: UTF-8 -*-
 # File name   : client.py
 # Description : client  
-# Website	 : www.adeept.com
+# Website	 : www.jiazhufuzhou.com.cn
 # Author	  : William
 # Date		: 2019/11/21
 

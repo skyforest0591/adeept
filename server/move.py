@@ -2,7 +2,7 @@
 # File name   : move.py
 # Description : Control Motor
 # Product     : PiCar-C
-# Website     : www.adeept.com
+# Website     : www.csailab.com
 # Author      : William
 # Date        : 2019/11/21
 import time
