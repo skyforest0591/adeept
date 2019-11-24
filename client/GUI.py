@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 # File name   : client.py
 # Description : client  
-# Website	 : www.jiazhufuzhou.com.cn
+# Website	 : www.csailab.com
 # Author	  : William
 # Date		: 2019/11/21
 
