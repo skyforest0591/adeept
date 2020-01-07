@@ -1,40 +1,40 @@
 Instruction：
 
-快捷键：
-W - 向前
-S - 向后
-A - 左转
-D - 右转
+Shortcut keys:
+W - forward
+S - backward
+A - turn left
+D - turn right
 
-H - 舵机返回初始位置位
+H - servo returns to initial position.
 
-U（CV Run） - 开启后，OpenCV功能可以控制电机转动，并通过超声波测距来与目标点保持一定距离
-O（SpeechR） - 语音识别，由于PWM输出端口数量限制，此功能默认关闭，语音识别功能开启后ws2812灯条由于PWM信号频率原因无法改变颜色
-      语音识别开启方法：将树梅派中的（PATH）/server/server.py的第25行SR_dect = 0更高为SR = 1即可
+U(CV Run) - When turned on, the OpenCV function can control the rotation of the motor and maintain a certain distance from the target point by ultrasonic ranging.
+O(SpeechR) - Speech recognition.Due to the limitation of the ports of PWM output, this function is off by default. After the voice recognition function is turned on, the ws2812 LED bar cannot change color due to the PWM signal frequency.       Enable speech recognition: change the SR_dect = 0 to SR = 1 of line 25
+of (PATH)/server/server.py in Raspberry Pi.
 
-I - 向上看
-K - 向下看
-J - 向左看
-L - 向右看
+I - look up
+K - look down
+J - look to the left
+L - look to the right
 
-使用GUI成功连接机器人后，机器人的IP地址会被保存在PC端的client文件夹内的IP.txt中，下次再运行GUI时不需要填写IP地址，直接按回车键即可连接。
+After successfully connecting to the robot using the GUI, the IP address of the robot will be saved in the IP.txt in the client folder of the PC. The next time you run the GUI, you do not need to fill in the IP address. Just press Enter to connect.
 
-手机APP控制功能默认开启，使用时连接树梅派的IP地址，端口号为10123
-手机APP控制功能关闭方法：将树梅派中的（PATH）/server/server.py的第26行appConnection = 0更高为appConnection = 1即可
-使用手机控制时，由于通常只能同时按一个按键，所以控制方法与PC的GUI稍有不同：
-比如：使用手机控制小车前进向左转，需要按一下前进键，再看左转弯键。
-          使用手机控制小车后退向右转，需要按一下后退键，再按右转弯键。
+The mobile APP control function is enabled by default. Connect the IP address of the Raspberry Pi when using.The port number is 10123.
+Turn off mobile APP control function: change appConnection = 0 to appConnection = 1 of line 26 of（PATH）/server/server.py in Raspberry Pi.
 
-关于走直线走不直的问题：
-使用舵机转向的小车存在不可避免的机械误差，组装完成后可以在GUI界面（右下角的三个scale）进行舵机微调，微调结果会即时表现出来，微调结束后可以按Save as Default键保存设置，这样下次开机会自动按照新的舵机初始位置来初始化舵机。
+When using mobile phone control, the control method is slightly different from the GUI of the PC because usually only one button can be pressed at the same time.
+For example: to use the phone to control the car to turn left, you need to press the forward button, then press the left-turn button; to use the phone to control the car to go backward and turn right, you need to press the backward button,then press the right-turn button.
 
-功能介绍：
-RadarScan - 超声波雷达扫描并成像
-FindColor - 基于OpencCV的颜色查找并追踪功能，默认查找黄颜色目标，可以根据自己需求更改需要查找的目标颜色（（PATH）/server/FPV.py的第65行和66行）
-MotionGet - 基于OpenCV的运动物体检测
-LineTrack - 寻迹功能
-Rainbow - LED灯彩虹变化（源码来自于https://github.com/rpi-ws281x/rpi-ws281x-python）（此功能不能与语音识别同时使用）
-Police - LED灯红蓝闪烁（此功能不能与语音识别同时使用）
-Automatic - 基于超声波的避障模式
-SteadyCam - 基于MPU6050的云台稳定功能，此功能开启后，依然可以通过控制云台上下看的案件控制云台运动到某一个仰角，然后云台会通过MPU6050度数来控制pwm2舵机使云台仰角保持在这一角度。
-右侧的红、绿、蓝三个scale分别用来控制LED灯的蓝色、绿色和蓝色的颜色及亮度。
+The issue of failing to go straight:
+There is an inevitable mechanical error in the car which uses servos for steering. After the assembly is completed, the servo can be fine-tuned in the GUI interface (the three scales in the lower right corner). The result of the fine adjustment will be displayed immediately. After finishing the fine adjustment,you can press Save as Default to save the setting, so that next time when booting it will automatically initialize the servo according to the new servo initial position.
+
+Features:
+RadarScan - Ultrasound radar scanning and imaging.
+FindColor - OpencCV-based color searching and tracking function.Search for yellow target by default.You can change the target color according to your needs (line 65 and 66 of (PATH) / server / FPV.py).
+MotionGet - OpenCV-based moving object detection.
+LineTrack - Tracking function.
+Rainbow - LEDs Rainbow Change (source code from https://github.com/rpi-ws281x/rpi-ws281x-python) (This feature cannot be used simultaneously with speech recognition).
+Police - LEDs flash red and blue (this feature cannot be used simultaneously with speech recognition).
+Automatic - Ultrasonic-based obstacle avoidance mode.
+SteadyCam - MPU6050-based PT stabilization function.After this function is turned on, you can still control the PT movement to a certain elevation by controlling the buttons on the PT, then the PT will control the PWM2 servo to maintain the elevation through the MPU6050 degrees.
+The three scales of red, green and blue on the right are respectively used to control the LED color of red, green and blue,and the brightness.

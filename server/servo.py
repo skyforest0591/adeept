@@ -52,14 +52,14 @@ def replace_num(initial,new_num):   #Call this function to replace data in '.txt
 
 def turnLeft(coe=1):
 	global pwm0_pos
-	pwm0_pos += int(coe*pwm0_range*pwm0_direction)
+	pwm0_pos = pwm0_init + int(coe*pwm0_range*pwm0_direction)
 	pwm0_pos = ctrl_range(pwm0_pos, pwm0_max, pwm0_min)
 	pwm.set_pwm(0, 0, pwm0_pos)
 
 
 def turnRight(coe=1):
 	global pwm0_pos
-	pwm0_pos -= int(coe*pwm0_range*pwm0_direction)
+	pwm0_pos = pwm0_init - int(coe*pwm0_range*pwm0_direction)
 	pwm0_pos = ctrl_range(pwm0_pos, pwm0_max, pwm0_min)
 	pwm.set_pwm(0, 0, pwm0_pos)
 

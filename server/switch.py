@@ -1,7 +1,7 @@
 #!/usr/bin/env/python3
 # File name   : switch.py
 # Production  : Robot HAT v2.0
-# Website     : www.csailab.com
+# Website     : www.adeept.com
 # Author      : William
 # Date        : 2019/11/21
 

@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 # File name   : setup.py
 # Description : Software Setup
-# Website     : www.csailab.com
+# Website     : www.adeept.com
 # Author      : William
 # Date        : 2019/11/21
 
 import os
 import time
+import sys
 
 def replace_num(file,initial,new_num):  
     newline=""
@@ -45,6 +46,10 @@ for x in range(1,4):
 		break
 
 ##########SR###########
+for x in range(1,4):
+	if os.system("sudo apt-get install pulseaudio pulseaudio-utils libpulse-dev libpulse-java libpulse0") == 0:
+		break
+
 for x in range(1,4):
 	if os.system("sudo apt-get install -y bison libasound2-dev swig") == 0:
 		break
@@ -165,7 +170,7 @@ except:
 try:
 	os.system('sudo touch //home/pi/startup.sh')
 	with open("//home/pi/startup.sh",'w') as file_to_write:
-		file_to_write.write("#!/bin/sh\nsudo python3 /%s/server.py"%sys.path[0])
+		file_to_write.write("#!/bin/sh\nsudo python3 /%s/server/server.py"%sys.path[0])
 except:
 	pass
 

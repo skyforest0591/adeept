@@ -1,7 +1,7 @@
 #!/usr/bin/env/python
 # File name   : server.py
 # Production  : PiCar-C
-# Website     : www.csailab.com
+# Website     : www.adeept.com
 # Author      : William
 # Date        : 2019/11/21
 
